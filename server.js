@@ -165,10 +165,33 @@ const DailyReportSchema = new mongoose.Schema({
     type: String,
     enum: ['Sugar', 'Fast food', 'Alcohol', 'Dairy', 'Veggies', 'Fruits', 'Meat', 'Grains'],
     required: true
-  }]
+  }],
 });
 
 const DailyReport = mongoose.model("DailyReport", DailyReportSchema);
+
+// Skincare Schema 
+
+const SkincareProductSchema = new mongoose.Schema({
+  user: {
+    type: String,
+    required: true
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  brand: {
+    type: String,
+    required: true
+  },
+  usedToday: {
+    type: Boolean,
+    default: false
+  }
+});
+
+const SkincareProduct = mongoose.model("SkincareProduct", SkincareProductSchema);
 
 
 
@@ -257,7 +280,62 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
   }
 });
 
+// POST endpoint to add a new skincare product
+app.post("/skincareProduct", authenticateUser, async (req, res) => {
+  try {
+    const { name, brand } = req.body;
+    const accessToken = req.header("Authorization");
+    const user = await User.findOne({ accessToken: accessToken });
+    if (user) {
+      const newProduct = await new SkincareProduct({
+        user: user._id,
+        name,
+        brand
+      }).save();
+      res.status(200).json({ success: true, response: newProduct });
+    } else {
+      res.status(400).json({ success: false, message: "Could not add product" });
+    }
+  } catch (e) {
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
 
+
+// GET endpoint to retrieve all skincare products of a user
+app.get("/skincareProduct", authenticateUser, async (req, res) => {
+  try {
+    const accessToken = req.header("Authorization");
+    const user = await User.findOne({ accessToken: accessToken });
+    if (user) {
+      const products = await SkincareProduct.find({ user: user._id });
+      res.status(200).json({ success: true, response: products });
+    } else {
+      res.status(400).json({ success: false, message: "Could not find products" });
+    }
+  } catch (e) {
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+
+// DELETE endpoint to delete a skincare product
+
+app.delete("/skincareProduct/:productId", authenticateUser, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const accessToken = req.header("Authorization");
+    const user = await User.findOne({ accessToken: accessToken });
+    if (user) {
+      await SkincareProduct.findOneAndDelete({ _id: productId, user: user._id });
+      res.status(200).json({ success: true, message: "Product deleted successfully" });
+    } else {
+      res.status(400).json({ success: false, message: "Could not delete product" });
+    }
+  } catch (e) {
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
 
 ///////////////////
 // Start the server
