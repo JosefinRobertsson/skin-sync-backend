@@ -130,23 +130,27 @@ app.post("/login", async (req, res) => {
     });
   }
 });
-// Thoughts
-const ThoughtSchema = new mongoose.Schema({
-  message: {
-    type: String
+
+// water intake schema 
+const WaterIntakeSchema = new mongoose.Schema({
+  glasses: {
+    type: Number,
+    required: true
   },
-  createdAt: {
+  date: {
     type: Date,
-    //default:0
     default: () => new Date()
   },
   user: {
-    type: String,
-    required: true
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User' 
   }
 });
 
-const Thought = mongoose.model("Thought", ThoughtSchema)
+const WaterIntake = mongoose.model("WaterIntake", WaterIntakeSchema);
+
+
 
 // Autehnticate the user
 const authenticateUser = async (req, res, next) => {
@@ -171,58 +175,24 @@ const authenticateUser = async (req, res, next) => {
   }
 }
 
-app.get("/thoughts", authenticateUser); // this will run the function authenticateUser before the function below, to make sure the user is logged in
-app.get("/thoughts", async (req, res) => {
-  try {
-    const thougths = await Thought.find({}).populate('user');
-    res.status(200).json({
-      success: true,
-      message: "Retrieved thoughts successfully",
-      response: thougths
-    });
-  } catch (e) {
-    res.status(400).json({
-      success: false,
-      response: e,
-      message: "Could not find thoughts"
-    });
-  }
-});
+// GET endpoint to retrieve logged water intake
 
-/* From wednesday live session
-app.get ("/thoughts", async (req,res) => {
+app.get("/waterIntake", authenticateUser, async (req, res) => {
   try {
-    const allThoughts = await Thoughts.find(); // leaving find() empty will extract everything from all thoughts
-    res.status(200).json({
-      success: true,
-      response: allThoughts,
-      message: "All thoughts found successfully"
-    });
-  } catch (e) { //if there is an error before we get everything in the try block successfully, the catch block will run
-    res.status(400).json({
-      success: false,
-      response: e,
-      message: "Could not find all thoughts"
-    });
-  }
-});
-*/
-
-app.post("/thoughts", authenticateUser);
-//added try/catch to post thoughts, needs to be tested
-app.post("/thoughts", async (req, res) => {
-  try {
-    const { message } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
     if (user) {
-      const thoughts = await new Thought({ message: message, user: user._id }).save();
-      res.status(200).json({ success: true, response: thoughts })
+      const waterIntakes = await WaterIntake.find({ user: user._id });
+      res.status(200).json({
+        success: true,
+        message: "Retrieved water intakes successfully",
+        response: waterIntakes
+      });
     } else {
       res.status(400).json({
         success: false,
         response: e,
-        message: "Could not post thought"
+        message: "Could not find water intakes"
       });
     }
   } catch (e) {
@@ -233,6 +203,35 @@ app.post("/thoughts", async (req, res) => {
     });
   }
 });
+
+
+//  POST endpoint to log water intake
+
+app.post("/waterIntake", authenticateUser, async (req, res) => {
+  try {
+    const { glasses } = req.body;
+    const accessToken = req.header("Authorization");
+    const user = await User.findOne({ accessToken: accessToken });
+    if (user) {
+      const newWaterIntake = await new WaterIntake({ glasses: glasses, user: user._id }).save();
+      res.status(200).json({ success: true, response: newWaterIntake });
+    } else {
+      res.status(400).json({
+        success: false,
+        response: e,
+        message: "Could not log water intake"
+      });
+    }
+  } catch (e) {
+    res.status(500).json({
+      success: false,
+      response: "Internal server error",
+      message: "Internal server error",
+      error: e.message
+    });
+  }
+});
+
 
 
 ///////////////////
