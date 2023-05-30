@@ -131,24 +131,44 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// water intake schema 
-const WaterIntakeSchema = new mongoose.Schema({
-  glasses: {
-    type: Number,
+// Daily Reposrt schema 
+const DailyReportSchema = new mongoose.Schema({
+  user: {
+    type: String,
     required: true
   },
   date: {
     type: Date,
     default: () => new Date()
   },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: 'User' 
-  }
+  exercised: {
+    type: Boolean,
+    default: false,
+    required: true
+  },
+  period: {
+    type: Boolean,
+    default: false,
+    required: true
+  },
+  mood: {
+    type: String,
+    enum: ['Not stressful', 'Under control', 'Stressful', 'Extremely stressful'],
+    required: true
+  },
+  skinCondition: [{
+    type: String,
+    enum: ['Normal', 'Irritated', 'Dry', 'Oily', 'Dull', 'Itchy', 'With texture', 'Acne'],
+    required: true
+  }],
+  diet: [{
+    type: String,
+    enum: ['Sugar', 'Fast food', 'Alcohol', 'Dairy', 'Veggies', 'Fruits', 'Meat', 'Grains'],
+    required: true
+  }]
 });
 
-const WaterIntake = mongoose.model("WaterIntake", WaterIntakeSchema);
+const DailyReport = mongoose.model("DailyReport", DailyReportSchema);
 
 
 
@@ -175,24 +195,24 @@ const authenticateUser = async (req, res, next) => {
   }
 }
 
-// GET endpoint to retrieve logged water intake
+// GET endpoint to retrieve logged daily report
 
-app.get("/waterIntake", authenticateUser, async (req, res) => {
+app.get("/dailyReport", authenticateUser, async (req, res) => {
   try {
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
     if (user) {
-      const waterIntakes = await WaterIntake.find({ user: user._id });
+      const dailyReports = await DailyReport.find({ user: user._id });
       res.status(200).json({
         success: true,
-        message: "Retrieved water intakes successfully",
-        response: waterIntakes
+        message: "Retrieved daily reports successfully",
+        response: dailyReports
       });
     } else {
       res.status(400).json({
         success: false,
         response: e,
-        message: "Could not find water intakes"
+        message: "Could not find daily reports"
       });
     }
   } catch (e) {
@@ -204,30 +224,35 @@ app.get("/waterIntake", authenticateUser, async (req, res) => {
   }
 });
 
+//  POST endpoint to log the daily report
 
-//  POST endpoint to log water intake
-
-app.post("/waterIntake", authenticateUser, async (req, res) => {
+app.post("/dailyReport", authenticateUser, async (req, res) => {
   try {
-    const { glasses } = req.body;
+    const { exercised, period, mood, skinCondition, diet } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
     if (user) {
-      const newWaterIntake = await new WaterIntake({ glasses: glasses, user: user._id }).save();
-      res.status(200).json({ success: true, response: newWaterIntake });
+      const newDailyReport = await new DailyReport({
+        user: user._id,
+        exercised,
+        period,
+        mood,
+        skinCondition,
+        diet
+      }).save();
+      res.status(200).json({ success: true, response: newDailyReport });
     } else {
       res.status(400).json({
         success: false,
         response: e,
-        message: "Could not log water intake"
+        message: "Could not log daily report"
       });
     }
   } catch (e) {
     res.status(500).json({
       success: false,
-      response: "Internal server error",
-      message: "Internal server error",
-      error: e.message
+      response: e,
+      message: "Internal server error", error: e.errors
     });
   }
 });
