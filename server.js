@@ -324,8 +324,12 @@ app.get("/skincareProduct", authenticateUser, async (req, res) => {
 app.delete("/skincareProduct/:productId", authenticateUser, async (req, res) => {
   try {
     const { productId } = req.params;
+    console.log("productId:", productId);
     const accessToken = req.header("Authorization");
+    console.log("accessToken:", accessToken); 
     const user = await User.findOne({ accessToken: accessToken });
+    console.log("user:", user); 
+
     if (user) {
       await SkincareProduct.findOneAndDelete({ _id: productId, user: user._id });
       res.status(200).json({ success: true, message: "Product deleted successfully" });
