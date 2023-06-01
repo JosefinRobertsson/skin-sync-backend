@@ -3,7 +3,6 @@ import cors from "cors";
 import mongoose from "mongoose";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
-import e from "express";
 import listEndpoints from 'express-list-endpoints';
 
 
@@ -59,6 +58,7 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model("User", UserSchema);
 
 app.post("/register", async (req, res) => {
+  console.log("Received POST /register with body:", req.body);
   const { username, password } = req.body;
   //to make sure a password is created
   if (!password) {
@@ -98,6 +98,7 @@ app.post("/register", async (req, res) => {
 });
 // Login
 app.post("/login", async (req, res) => {
+  console.log("Received POST /login with body:", req.body);
   const { username, password } = req.body;
   try {
     // tell us if the password that user put is the same that we have in the data base
@@ -188,6 +189,11 @@ const SkincareProductSchema = new mongoose.Schema({
   usedToday: {
     type: Boolean,
     default: false
+  },
+  routine: {
+    type: String,
+    enum: ['morning', 'night'],
+    required: true
   }
 });
 
@@ -198,32 +204,35 @@ const SkincareProduct = mongoose.model("SkincareProduct", SkincareProductSchema)
 // Autehnticate the user
 const authenticateUser = async (req, res, next) => {
   const accessToken = req.header("Authorization");
+  console.log("accessToken:", accessToken);
   try {
-    console.log("accessToken:", accessToken); 
-    const user = await User.findOne({ accessToken: accessToken }); // find the user with the access token they send in the header called Authorization
+    const user = await User.findOne({ accessToken: accessToken });
     console.log("user:", user);
     if (user) {
       next();
     } else {
       res.status(403).json({
-        sucess: false,
-        response: e,
+        success: false,
+        response: null,
         message: "You must be logged in to see this page"
-      })
+      });
     }
   } catch (e) {
     console.error("authenticateUser Error:", e);
     res.status(500).json({
-      sucess: false,
-      response: e,
-      message: "Internal server error", error: e.errors
+      success: false,
+      response: null,
+      message: "Internal server error",
+      error: e.errors
     });
   }
-}
+};
+
 
 // GET endpoint to retrieve logged daily report
 
 app.get("/dailyReport", authenticateUser, async (req, res) => {
+  
   try {
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
@@ -293,14 +302,15 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
 // POST endpoint to add a new skincare product
 app.post("/skincareProduct", authenticateUser, async (req, res) => {
   try {
-    const { name, brand } = req.body;
+    const { name, brand, routine } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
     if (user) {
       const newProduct = await new SkincareProduct({
         user: user._id,
         name,
-        brand
+        brand,
+        routine
       }).save();
       res.status(200).json({ success: true, response: newProduct });
     } else {
@@ -312,21 +322,44 @@ app.post("/skincareProduct", authenticateUser, async (req, res) => {
 });
 
 
-// GET endpoint to retrieve all skincare products of a user
-app.get("/skincareProduct", authenticateUser, async (req, res) => {
+// GET endpoint to retrieve all skincare products of a user for the morning routine
+app.get("/skincareProduct/morning", authenticateUser, async (req, res) => {
   try {
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
+    console.log("User:", user); // Log user object to check if it's retrieved successfully
     if (user) {
-      const products = await SkincareProduct.find({ user: user._id });
+      const products = await SkincareProduct.find({ user: user._id, routine: 'morning' });
+      console.log("Morning routine: products", products); // Log products array to check if it contains the expected products
       res.status(200).json({ success: true, response: products });
     } else {
       res.status(400).json({ success: false, message: "Could not find products" });
     }
   } catch (e) {
+    console.error("GET /skincareProduct/morning Error:", e); // Log any error that occurs during the retrieval process
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
+
+// GET endpoint to retrieve all skincare products of a user for the night routine
+app.get("/skincareProduct/night", authenticateUser, async (req, res) => {
+  try {
+    const accessToken = req.header("Authorization");
+    const user = await User.findOne({ accessToken: accessToken });
+    console.log("User:", user); // Log user object to check if it's retrieved successfully
+    if (user) {
+      const products = await SkincareProduct.find({ user: user._id, routine: 'night' });
+      console.log("Night routine: products", products); // Log products array to check if it contains the expected products
+      res.status(200).json({ success: true, response: products });
+    } else {
+      res.status(400).json({ success: false, message: "Could not find products" });
+    }
+  } catch (e) {
+    console.error("GET /skincareProduct/night Error:", e); // Log any error that occurs during the retrieval process
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
 
 
 // DELETE endpoint to delete a skincare product
