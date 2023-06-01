@@ -9,7 +9,7 @@ import listEndpoints from 'express-list-endpoints';
 
 // i have changed from localhost to 127.0.0.1
 // original: "mongodb://localhost/project-mongo";
-const mongoUrl = process.env.MONGO_URL || "mongodb://127.0.0.1/Authentication";
+const mongoUrl = process.env.MONGO_URL || "mongodb://127.0.0.1/SkinSync";
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = Promise;
 
@@ -131,7 +131,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Daily Reposrt schema 
+// Daily Report schema 
 const DailyReportSchema = new mongoose.Schema({
   user: {
     type: String,
@@ -199,7 +199,9 @@ const SkincareProduct = mongoose.model("SkincareProduct", SkincareProductSchema)
 const authenticateUser = async (req, res, next) => {
   const accessToken = req.header("Authorization");
   try {
+    console.log("accessToken:", accessToken); 
     const user = await User.findOne({ accessToken: accessToken }); // find the user with the access token they send in the header called Authorization
+    console.log("user:", user);
     if (user) {
       next();
     } else {
@@ -210,6 +212,7 @@ const authenticateUser = async (req, res, next) => {
       })
     }
   } catch (e) {
+    console.error("authenticateUser Error:", e);
     res.status(500).json({
       sucess: false,
       response: e,
@@ -239,6 +242,7 @@ app.get("/dailyReport", authenticateUser, async (req, res) => {
       });
     }
   } catch (e) {
+    console.error("GET /dailyReport Error:", e);
     res.status(500).json({
       success: false,
       response: e,
@@ -254,6 +258,9 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
     const { exercised, period, mood, skinCondition, diet } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
+    console.log("req.body:", req.body); 
+    console.log("accessToken:", accessToken); 
+    console.log("user:", user);
     if (user) {
       const newDailyReport = await new DailyReport({
         user: user._id,
@@ -263,15 +270,18 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
         skinCondition,
         diet
       }).save();
+      console.log("newDailyReport:", newDailyReport); 
       res.status(200).json({ success: true, response: newDailyReport });
     } else {
       res.status(400).json({
         success: false,
         response: e,
-        message: "Could not log daily report"
+        message: "Could not log daily report",
+        error: e.message,
       });
     }
   } catch (e) {
+    console.error("POST /dailyReport Error:", e); 
     res.status(500).json({
       success: false,
       response: e,
