@@ -5,37 +5,27 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import listEndpoints from 'express-list-endpoints';
 
+// -----------------------------------------
+// SETUP
+// -----------------------------------------
 
-// i have changed from localhost to 127.0.0.1
-// original: "mongodb://localhost/project-mongo";
 const mongoUrl = process.env.MONGO_URL || "mongodb://127.0.0.1/SkinSync";
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = Promise;
 
-// Defines the port the app will run on. Defaults to 8080, but can be overridden
-// when starting the server. Example command to overwrite PORT env variable value:
-// PORT=9000 npm start
+// Defines the port the app will run on.
 const port = process.env.PORT || 8080;
 const app = express();
 
-
-
-// Add middlewares to enable cors and json body parsing
+// Middlewares 
 app.use(cors());
 app.use(express.json());
 
-// Start defining your routes here
-app.get("/", (req, res) => {
-  res.send({
-    Welcome: "Welcome to the Authentication app",
-    Routes: listEndpoints(app)
-  });
-});
+// -----------------------------------------
+// SCHEMAS AND MODELS
+// -----------------------------------------
 
-app.get('/', (req, res) => {
-  res.json(routes);
-});
-///////////////////
+// User schema
 const UserSchema = new mongoose.Schema({
   username: {
     type: String,
@@ -54,83 +44,8 @@ const UserSchema = new mongoose.Schema({
   },
 });
 
-//user model
+
 const User = mongoose.model("User", UserSchema);
-
-app.post("/register", async (req, res) => {
-  console.log("Received POST /register with body:", req.body);
-  const { username, password } = req.body;
-  //to make sure a password is created
-  if (!password) {
-    return res.status(400).json({
-      success: false,
-      response: "Password is required",
-    });
-  }
- //ensure password is at least 6 characters long
-  if (password.length < 6) { 
-    return res.status(400).json({
-      success: false,
-      response: "Password needs to be at least 6 characters long",
-    });
-  }
-  try {
-    const salt = bcrypt.genSaltSync();
-    const newUser = await new User({
-      username: username,
-      password: bcrypt.hashSync(password, salt), // obscure the password
-    }).save();
-    res.status(201).json({
-      success: true,
-      response: {
-        username: newUser.username,
-        id: newUser._id,
-        accessToken: newUser.accessToken,
-      },
-      message: "User created successfully"
-    });
-  } catch (e) {
-    res.status(400).json({
-      success: false,
-      response: "Could not create user", error: e.errors
-    });
-  }
-});
-// Login
-app.post("/login", async (req, res) => {
-  console.log("Received POST /login with body:", req.body);
-  const { username, password } = req.body;
-  try {
-    // tell us if the password that user put is the same that we have in the data base
-    const user = await User.findOne({ username: username });
-
-    if (user && bcrypt.compareSync(password, user.password)) {
-      res.status(200).json({
-        success: true,
-        response: {
-          username: user.username,
-          id: user._id,
-          accessToken: user.accessToken,
-        },
-        message: "User logged in successfully"
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        response: "Credentials do not match",
-        message: "Credentials do not match",
-        error: null
-      });
-    }
-  } catch (e) {
-    res.status(500).json({
-      success: false,
-      response: "Internal server error",
-      message: "Internal server error",
-      error: e.errors
-    });
-  }
-});
 
 // Daily Report schema 
 const DailyReportSchema = new mongoose.Schema({
@@ -201,7 +116,12 @@ const SkincareProduct = mongoose.model("SkincareProduct", SkincareProductSchema)
 
 
 
+// -----------------------------------------
+// MIDDLEWARES
+// -----------------------------------------
 // Autehnticate the user
+
+
 const authenticateUser = async (req, res, next) => {
   const accessToken = req.header("Authorization");
   console.log("accessToken:", accessToken);
@@ -228,8 +148,105 @@ const authenticateUser = async (req, res, next) => {
   }
 };
 
+// -----------------------------------------
+// ROUTES
+// -----------------------------------------
 
-// GET endpoint to retrieve logged daily report
+
+// Root route
+app.get("/", (req, res) => {
+  res.send({
+    Welcome: "Welcome to the Authentication app",
+    Routes: listEndpoints(app)
+  });
+});
+
+app.get('/', (req, res) => {
+  res.json(routes);
+});
+
+// Register route
+
+app.post("/register", async (req, res) => {
+  console.log("Received POST /register with body:", req.body);
+  const { username, password } = req.body;
+  //to make sure a password is created
+  if (!password) {
+    return res.status(400).json({
+      success: false,
+      response: "Password is required",
+    });
+  }
+ //ensure password is at least 6 characters long
+  if (password.length < 6) { 
+    return res.status(400).json({
+      success: false,
+      response: "Password needs to be at least 6 characters long",
+    });
+  }
+  try {
+    const salt = bcrypt.genSaltSync();
+    const newUser = await new User({
+      username: username,
+      password: bcrypt.hashSync(password, salt), // obscure the password
+    }).save();
+    res.status(201).json({
+      success: true,
+      response: {
+        username: newUser.username,
+        id: newUser._id,
+        accessToken: newUser.accessToken,
+      },
+      message: "User created successfully"
+    });
+  } catch (e) {
+    res.status(400).json({
+      success: false,
+      response: "Could not create user", error: e.errors
+    });
+  }
+});
+
+// Login Route
+
+app.post("/login", async (req, res) => {
+  console.log("Received POST /login with body:", req.body);
+  const { username, password } = req.body;
+  try {
+    // tell us if the password that user put is the same that we have in the data base
+    const user = await User.findOne({ username: username });
+
+    if (user && bcrypt.compareSync(password, user.password)) {
+      res.status(200).json({
+        success: true,
+        response: {
+          username: user.username,
+          id: user._id,
+          accessToken: user.accessToken,
+        },
+        message: "User logged in successfully"
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        response: "Credentials do not match",
+        message: "Credentials do not match",
+        error: null
+      });
+    }
+  } catch (e) {
+    res.status(500).json({
+      success: false,
+      response: "Internal server error",
+      message: "Internal server error",
+      error: e.errors
+    });
+  }
+});
+
+
+// daily report route
+//GET
 
 app.get("/dailyReport", authenticateUser, async (req, res) => {
   
@@ -260,7 +277,7 @@ app.get("/dailyReport", authenticateUser, async (req, res) => {
   }
 });
 
-//  POST endpoint to log the daily report
+// POST
 
 app.post("/dailyReport", authenticateUser, async (req, res) => {
   try {
@@ -299,7 +316,9 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
   }
 });
 
-// POST endpoint to add a new skincare product
+// skincare product ROUTE
+//POST
+
 app.post("/skincareProduct", authenticateUser, async (req, res) => {
   try {
     const { name, brand, routine } = req.body;
@@ -322,7 +341,7 @@ app.post("/skincareProduct", authenticateUser, async (req, res) => {
 });
 
 
-// GET endpoint to retrieve all skincare products of a user for the morning routine
+// GET  retrieve all skincare products of a user for the MORNING routine
 app.get("/skincareProduct/morning", authenticateUser, async (req, res) => {
   try {
     const accessToken = req.header("Authorization");
@@ -341,7 +360,7 @@ app.get("/skincareProduct/morning", authenticateUser, async (req, res) => {
   }
 });
 
-// GET endpoint to retrieve all skincare products of a user for the night routine
+// GET  retrieve all skincare products of a user for the NIGTH routine
 app.get("/skincareProduct/night", authenticateUser, async (req, res) => {
   try {
     const accessToken = req.header("Authorization");
@@ -359,7 +378,6 @@ app.get("/skincareProduct/night", authenticateUser, async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
-
 
 
 // DELETE endpoint to delete a skincare product
@@ -384,8 +402,12 @@ app.delete("/skincareProduct/:productId", authenticateUser, async (req, res) => 
   }
 });
 
-///////////////////
-// Start the server
+
+// -----------------------------------------
+// SERVER START
+// -----------------------------------------
+
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
