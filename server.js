@@ -245,6 +245,54 @@ app.post("/login", async (req, res) => {
 });
 
 
+
+// User page route
+app.get('/userPage', authenticateUser, async (req, res) => {
+  const accessToken = req.header("Authorization");
+  const user = await User.findOne({ accessToken: accessToken });
+
+  const axios = require('axios');
+  const API_KEY = '0e71885f3a66e20937e994f9d36993a1';
+  const LATITUDE = '60.1282'; // Latitude for Sweden
+  const LONGITUDE = '18.6435'; // Longitude for Sweden
+
+  try {
+    const response = await axios.get(`http://api.openweathermap.org/data/2.5/onecall?lat=${LATITUDE}&lon=${LONGITUDE}&exclude=hourly,daily&appid=${API_KEY}`);
+    const uvIndex = response.data.current.uvi;
+
+    if (user) {
+      res.json({
+        username: user.username,
+        dailyReportLink: "/dailyReport",
+        skincareProductLink: "/skincareProduct",
+        uvIndex: uvIndex
+      });
+    } else {
+      res.status(403).json({message: "You must be logged in to see this page"});
+    }
+  } catch (error) {
+    console.log('Error:', error);
+    res.status(500).json({message: "Unable to retrieve UV index at this time"});
+  }
+});
+
+
+
+// Statistics route
+
+app.get('/statisticsPage', authenticateUser, async (req, res) => {
+  const accessToken = req.header('Authorization');
+  const user = await User.findOne({ accessToken: accessToken });
+  if (user) {
+ 
+    res.status(200).json({ message: 'Statistics page accessed successfully' });
+  } else {
+    res.status(403).json({ message: 'You must be logged in to see this page' });
+  }
+});
+
+
+
 // daily report route
 //GET
 
