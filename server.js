@@ -163,7 +163,7 @@ app.get("/", (req, res) => {
 
 app.get('/', (req, res) => {
   res.json(routes);
-});
+}); 
 
 // Register route
 
@@ -244,6 +244,38 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// Logout Route
+
+app.post("/logout", authenticateUser, async (req, res) => {
+  console.log("Received POST /logout with body:", req.body);
+  const accessToken = req.header("Authorization");
+  try {
+    const user = await User.findOne({ accessToken: accessToken });
+    if (user) {
+      user.accessToken = null;
+      await user.save();
+      res.status(200).json({
+        success: true,
+        response: null,
+        message: "User logged out successfully"
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        response: "Could not find user",
+        message: "Could not find user",
+        error: null
+      });
+    }
+  } catch (e) {
+    res.status(500).json({
+      success: false,
+      response: "Internal server error",
+      message: "Internal server error",
+      error: e.errors
+    });
+  }
+});
 
 
 // User page route
@@ -290,6 +322,7 @@ app.get('/statisticsPage', authenticateUser, async (req, res) => {
     res.status(403).json({ message: 'You must be logged in to see this page' });
   }
 });
+
 
 
 
