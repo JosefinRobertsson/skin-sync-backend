@@ -375,7 +375,10 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
         period,
         mood,
         skinCondition,
-        diet
+        diet,
+        waterAmount,
+        sleepHours
+
       }).save();
       console.log("newDailyReport:", newDailyReport); 
       res.status(200).json({ success: true, response: newDailyReport });
