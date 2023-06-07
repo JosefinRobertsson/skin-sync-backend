@@ -109,6 +109,10 @@ const SkincareProductSchema = new mongoose.Schema({
     type: String,
     enum: ['morning', 'night'],
     required: true
+  },
+  usageHistory: {
+    type: [Date],
+    default: []
   }
 });
 
@@ -296,7 +300,7 @@ app.get('/userPage', authenticateUser, async (req, res) => {
       res.json({
         username: user.username,
         dailyReportLink: "/dailyReport",
-        skincareProductLink: "/skincareProduct",
+        productShelfLink: "/productShelf",
         uvIndex: uvIndex
       });
     } else {
@@ -403,7 +407,7 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
 // skincare product ROUTE
 //POST
 
-app.post("/skincareProduct", authenticateUser, async (req, res) => {
+app.post("/productShelf", authenticateUser, async (req, res) => {
   try {
     const { name, brand, routine } = req.body;
     const accessToken = req.header("Authorization");
@@ -424,9 +428,40 @@ app.post("/skincareProduct", authenticateUser, async (req, res) => {
   }
 });
 
+// Logging product usage 
+
+app.post("/productShelf/logUsage", authenticateUser, async (req, res) => {
+try {
+  const { productId, usedToday } = req.body;
+  const accessToken = req.header("Authorization");
+  const user = await User.findOne({ accessToken: accessToken });
+  if (user) {
+    const product = await SkincareProduct.findById(productId);
+    if (!product) {
+      res.status(400).json({ success: false, message: "Could not find product", error: e.errors });
+    } 
+
+    product.usedToday = usedToday;
+
+    if (usedToday) {
+      product.usageHistory.push(new Date());
+    }
+
+    await product.save();
+    res.status(200).json({ success: true, response: product });
+  } else {
+    res.status(400).json({ success: false, message: "Could not find product" });
+  }
+} catch (e) {
+  res.status(500).json({ success: false, message: e.message });
+}
+});
+
+
+
 
 // GET  retrieve all skincare products of a user for the MORNING routine
-app.get("/skincareProduct/morning", authenticateUser, async (req, res) => {
+app.get("/productShelf/morning", authenticateUser, async (req, res) => {
   try {
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
@@ -439,13 +474,13 @@ app.get("/skincareProduct/morning", authenticateUser, async (req, res) => {
       res.status(400).json({ success: false, message: "Could not find products" });
     }
   } catch (e) {
-    console.error("GET /skincareProduct/morning Error:", e); // Log any error that occurs during the retrieval process
+    console.error("GET /productShelf/morning Error:", e); // Log any error that occurs during the retrieval process
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
 // GET  retrieve all skincare products of a user for the NIGTH routine
-app.get("/skincareProduct/night", authenticateUser, async (req, res) => {
+app.get("/productShelf/night", authenticateUser, async (req, res) => {
   try {
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
@@ -458,7 +493,7 @@ app.get("/skincareProduct/night", authenticateUser, async (req, res) => {
       res.status(400).json({ success: false, message: "Could not find products" });
     }
   } catch (e) {
-    console.error("GET /skincareProduct/night Error:", e); // Log any error that occurs during the retrieval process
+    console.error("GET /productShelf/night Error:", e); // Log any error that occurs during the retrieval process
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
@@ -466,7 +501,7 @@ app.get("/skincareProduct/night", authenticateUser, async (req, res) => {
 
 // DELETE endpoint to delete a skincare product
 
-app.delete("/skincareProduct/:productId", authenticateUser, async (req, res) => {
+app.delete("/productShelf/:productId", authenticateUser, async (req, res) => {
   try {
     const { productId } = req.params;
     console.log("productId:", productId);
