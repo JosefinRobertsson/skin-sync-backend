@@ -82,6 +82,15 @@ const DailyReportSchema = new mongoose.Schema({
     enum: ['Sugar', 'Fast food', 'Alcohol', 'Dairy', 'Veggies', 'Fruits', 'Meat', 'Grains'],
     required: true
   }],
+  waterAmount: {
+    type: Number,
+    required: true
+  },
+  sleepHours: {
+    type: Number,
+    required: true
+  },
+
 });
 
 const DailyReport = mongoose.model("DailyReport", DailyReportSchema);
@@ -362,7 +371,7 @@ app.get("/dailyReport", authenticateUser, async (req, res) => {
 
 app.post("/dailyReport", authenticateUser, async (req, res) => {
   try {
-    const { exercised, period, mood, skinCondition, diet } = req.body;
+    const { exercised, period, mood, skinCondition, diet, waterAmount, sleepHours } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
     console.log("req.body:", req.body); 
