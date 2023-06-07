@@ -82,9 +82,20 @@ const DailyReportSchema = new mongoose.Schema({
     enum: ['Sugar', 'Fast food', 'Alcohol', 'Dairy', 'Veggies', 'Fruits', 'Meat', 'Grains'],
     required: true
   }],
+  waterAmount: {
+    type: Number,
+    required: true
+  },
+  sleepHours: {
+    type: Number,
+    required: true
+  },
+
 });
 
 const DailyReport = mongoose.model("DailyReport", DailyReportSchema);
+
+
 
 // Skincare Schema 
 
@@ -366,7 +377,7 @@ app.get("/dailyReport", authenticateUser, async (req, res) => {
 
 app.post("/dailyReport", authenticateUser, async (req, res) => {
   try {
-    const { exercised, period, mood, skinCondition, diet } = req.body;
+    const { exercised, period, mood, skinCondition, diet, waterAmount, sleepHours } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
     console.log("req.body:", req.body); 
@@ -403,6 +414,56 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
     });
   }
 });
+
+// WEEKLY 
+
+app.get('/weeklyReports', authenticateUser, async (req, res) => {
+  try {
+    const result = await DailyReport.aggregate([
+      {
+        $addFields: {
+          "year": {
+            $isoWeekYear: {
+              date: { $toDate: "$date" }
+            }
+          },
+          "weekNumber": {
+            $isoWeek: {
+              date: { $toDate: "$date" }
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          "weekCreated": {
+            $concat: [
+              { $toString: "$year" },
+              "-W",
+              { $toString: "$weekNumber" }
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            yearWeek: "$weekCreated",
+            user: "$user"
+          },
+          data: { $push: "$$ROOT" }
+        }
+      }
+    ]).exec();
+
+    console.log(result);
+    res.send(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
 
 // skincare product ROUTE
 //POST
