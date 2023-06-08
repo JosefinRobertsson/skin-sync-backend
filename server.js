@@ -112,6 +112,10 @@ const SkincareProductSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  date: {
+    type: Date,
+    default: () => new Date()
+  },
   usedToday: {
     type: Boolean,
     default: false
@@ -375,34 +379,47 @@ app.get("/dailyReport", authenticateUser, async (req, res) => {
 
 // POST
 
-
 app.post("/dailyReport", authenticateUser, async (req, res) => {
   try {
     const { exercised, period, mood, skinCondition, diet, waterAmount, sleepHours } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
+    
     console.log("req.body:", req.body); 
     console.log("accessToken:", accessToken); 
     console.log("user:", user);
     
     if (user) {
-      const LatestDailyReport = [{date: new Date()}];
-      const latestIntlDate = new Intl.DateTimeFormat('en-Us').format(LatestDailyReport[0].date);
+      // Get the latest report for the user BANANA LIKES BANANAS
+      const latestReport = await DailyReport.findOne({ user: user._id }).sort({ date: -1 });
+      const latestIntlDate = new Intl.DateTimeFormat('en-Us').format(latestReport.date);
       const currentIntlDate = new Intl.DateTimeFormat('en-Us').format(new Date());
-      if (latestIntlDate === currentIntlDate) {
-        console.log(latestIntlDate);
-      }
-      const newDailyReport = await new DailyReport({
-        user: user._id,
-        exercised,
-        period,
-        mood,
-        skinCondition,
-        diet,
-        waterAmount,
-        sleepHours
 
-      }).save();
+      let newDailyReport;
+      if (latestIntlDate === currentIntlDate) {
+        // Update the existing report
+        latestReport.exercised = exercised;
+        latestReport.period = period;
+        latestReport.mood = mood;
+        latestReport.skinCondition = skinCondition;
+        latestReport.diet = diet;
+        latestReport.waterAmount = waterAmount;
+        latestReport.sleepHours = sleepHours;
+        newDailyReport = await latestReport.save();
+      } else {
+        // Create a new report
+        newDailyReport = await new DailyReport({
+          user: user._id,
+          exercised,
+          period,
+          mood,
+          skinCondition,
+          diet,
+          waterAmount,
+          sleepHours
+        }).save();
+      }
+      
       console.log("newDailyReport:", newDailyReport); 
       res.status(200).json({ success: true, response: newDailyReport });
     } else {
@@ -418,10 +435,12 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
     res.status(500).json({
       success: false,
       response: e,
-      message: "Internal server error", error: e.errors
+      message: "Internal server error", 
+      error: e.errors
     });
   }
 });
+
 
 // WEEKLY 
 
