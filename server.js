@@ -386,7 +386,7 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
     console.log("user:", user);
     
     if (user) {
-      // Get the latest report for the user
+      // Get the latest report for the user BANANA LIKES BANANAS
       const latestReport = await DailyReport.findOne({ user: user._id }).sort({ date: -1 });
       const latestIntlDate = new Intl.DateTimeFormat('en-Us').format(latestReport.date);
       const currentIntlDate = new Intl.DateTimeFormat('en-Us').format(new Date());
