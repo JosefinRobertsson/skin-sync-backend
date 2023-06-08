@@ -528,6 +528,8 @@ try {
 
     if (usedToday) {
       product.usageHistory.push(new Date());
+    } else {
+      product.usageHistory.pop();
     }
 
     await product.save();
