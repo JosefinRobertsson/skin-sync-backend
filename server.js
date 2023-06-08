@@ -375,6 +375,7 @@ app.get("/dailyReport", authenticateUser, async (req, res) => {
 
 // POST
 
+
 app.post("/dailyReport", authenticateUser, async (req, res) => {
   try {
     const { exercised, period, mood, skinCondition, diet, waterAmount, sleepHours } = req.body;
@@ -383,7 +384,14 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
     console.log("req.body:", req.body); 
     console.log("accessToken:", accessToken); 
     console.log("user:", user);
+    
     if (user) {
+      const LatestDailyReport = [{date: new Date()}];
+      const latestIntlDate = new Intl.DateTimeFormat('en-Us').format(LatestDailyReport[0].date);
+      const currentIntlDate = new Intl.DateTimeFormat('en-Us').format(new Date());
+      if (latestIntlDate === currentIntlDate) {
+        console.log(latestIntlDate);
+      }
       const newDailyReport = await new DailyReport({
         user: user._id,
         exercised,
