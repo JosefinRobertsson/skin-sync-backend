@@ -141,6 +141,11 @@ const SkincareProductSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  category: {
+    type: String,
+    enum: ['cleanser', 'moisturizer', 'serum', 'sunscreen', 'other'],
+    required: true
+  },
   date: {
     type: Date,
     default: () => new Date()
@@ -526,7 +531,7 @@ app.get('/weeklyReports', authenticateUser, async (req, res) => {
 
 app.post("/productShelf", authenticateUser, async (req, res) => {
   try {
-    const { name, brand, routine } = req.body;
+    const { name, brand, category, routine } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
     if (user) {
@@ -534,6 +539,7 @@ app.post("/productShelf", authenticateUser, async (req, res) => {
         user: user._id,
         name,
         brand,
+        category,
         routine
       }).save();
       res.status(200).json({ success: true, response: newProduct });
@@ -544,6 +550,18 @@ app.post("/productShelf", authenticateUser, async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
+
+// GET categories to populate dropdown menu
+app.get("/categories", authenticateUser, async (req, res) => {
+  try {
+    const categories = SkincareProduct.schema.path("category").enumValues;
+    res.status(200).json({ success: true, categories });
+  } catch (e) {
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+
 
 // Logging product usage 
 
@@ -597,6 +615,7 @@ app.get("/productShelf/morning", authenticateUser, async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
+
 
 // GET  retrieve all skincare products of a user for the NIGTH routine
 app.get("/productShelf/night", authenticateUser, async (req, res) => {
