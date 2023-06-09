@@ -58,8 +58,7 @@ const DailyReportSchema = new mongoose.Schema({
     default: () => new Date()
   },
   exercised: {
-    type: Boolean,
-    default: false,
+    type: Number,
     required: true
   },
   period: {
@@ -67,11 +66,41 @@ const DailyReportSchema = new mongoose.Schema({
     default: false,
     required: true
   },
+  /*
   mood: {
     type: String,
     enum: ['Not stressful', 'Under control', 'Stressful', 'Extremely stressful'],
     required: true
+  },*/
+  stress: {
+    type: Number,
+    required: true
   },
+  acne: {
+    type: Number,
+    required: true
+  },
+
+  sugar: {
+    type: Number,
+    required: true
+  },
+
+  alcohol: {
+    type: Number,
+    required: true
+  },
+
+  dairy: {
+    type: Number,
+    required: true
+  },
+
+  greasyFood: {
+    type: Number,
+    required: true
+  },
+/*
   skinCondition: [{
     type: String,
     enum: ['Normal', 'Irritated', 'Dry', 'Oily', 'Dull', 'Itchy', 'With texture', 'Acne'],
@@ -81,7 +110,8 @@ const DailyReportSchema = new mongoose.Schema({
     type: String,
     enum: ['Sugar', 'Fast food', 'Alcohol', 'Dairy', 'Veggies', 'Fruits', 'Meat', 'Grains'],
     required: true
-  }],
+  }], */
+  
   waterAmount: {
     type: Number,
     required: true
@@ -94,7 +124,6 @@ const DailyReportSchema = new mongoose.Schema({
 });
 
 const DailyReport = mongoose.model("DailyReport", DailyReportSchema);
-
 
 
 // Skincare Schema 
@@ -386,7 +415,8 @@ app.get("/dailyReport", authenticateUser, async (req, res) => {
 
 app.post("/dailyReport", authenticateUser, async (req, res) => {
   try {
-    const { exercised, period, mood, skinCondition, diet, waterAmount, sleepHours } = req.body;
+    const { exercised, period, waterAmount, sleepHours, stress, acne,  greasyFood, dairy,
+      alcohol, sugar  } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
     
@@ -405,9 +435,12 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
         // Update the existing report
         latestReport.exercised = exercised;
         latestReport.period = period;
-        latestReport.mood = mood;
-        latestReport.skinCondition = skinCondition;
-        latestReport.diet = diet;
+        latestReport.stress = stress;
+        latestReport.acne = acne;
+        latestReport.greasyFood = greasyFood;
+        latestReport.dairy = dairy;
+        latestReport.alcohol = alcohol;
+        latestReport.sugar = sugar;
         latestReport.waterAmount = waterAmount;
         latestReport.sleepHours = sleepHours;
         newDailyReport = await latestReport.save();
@@ -417,9 +450,12 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
           user: user._id,
           exercised,
           period,
-          mood,
-          skinCondition,
-          diet,
+          stress,
+          acne,
+          greasyFood,
+          dairy,
+          alcohol,
+          sugar,
           waterAmount,
           sleepHours
         }).save();
