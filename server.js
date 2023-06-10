@@ -558,6 +558,35 @@ app.post("/productShelf", authenticateUser, async (req, res) => {
   }
 });
 
+// PUT to update a product
+app.put("/productShelf/:productId", authenticateUser, async (req, res) => {
+  try {
+    const productId = req.params.productId;
+    const { name, brand, category, routine } = req.body;
+    const accessToken = req.header("Authorization");
+    const user = await User.findOne({ accessToken: accessToken });
+
+    if (user) {
+      const updatedProduct = await SkincareProduct.findByIdAndUpdate(
+        productId,
+        { name, brand, category, routine },
+        { new: true }
+      );
+
+      if (updatedProduct) {
+        res.status(200).json({ success: true, response: updatedProduct });
+      } else {
+        res.status(404).json({ success: false, message: "Product not found" });
+      }
+    } else {
+      res.status(400).json({ success: false, message: "Could not update product" });
+    }
+  } catch (e) {
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+
 // GET categories to populate dropdown menu
 app.get("/categories", authenticateUser, async (req, res) => {
   try {
