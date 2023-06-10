@@ -412,26 +412,22 @@ app.get("/dailyReport", authenticateUser, async (req, res) => {
 });
 
 // POST
-
 app.post("/dailyReport", authenticateUser, async (req, res) => {
   try {
-    const { exercised, period, waterAmount, sleepHours, stress, acne,  greasyFood, dairy,
-      alcohol, sugar  } = req.body;
+    const { exercised, period, waterAmount, sleepHours, stress, acne, greasyFood, dairy, alcohol, sugar } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
-    
-    console.log("req.body:", req.body); 
-    console.log("accessToken:", accessToken); 
+
+    console.log("req.body:", req.body);
+    console.log("accessToken:", accessToken);
     console.log("user:", user);
-    
+
     if (user) {
-      // Get the latest report for the user BANANA LIKES BANANAS
+      // Get the latest report for the user
       const latestReport = await DailyReport.findOne({ user: user._id }).sort({ date: -1 });
-      const latestIntlDate = new Intl.DateTimeFormat('en-Us').format(latestReport.date);
-      const currentIntlDate = new Intl.DateTimeFormat('en-Us').format(new Date());
 
       let newDailyReport;
-      if (latestIntlDate === currentIntlDate) {
+      if (latestReport) {
         // Update the existing report
         latestReport.exercised = exercised;
         latestReport.period = period;
@@ -460,27 +456,24 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
           sleepHours
         }).save();
       }
-      
-      console.log("newDailyReport:", newDailyReport); 
+
+      console.log("newDailyReport:", newDailyReport);
       res.status(200).json({ success: true, response: newDailyReport });
     } else {
       res.status(400).json({
         success: false,
-        response: e,
         message: "Could not log daily report",
-        error: e.message,
       });
     }
   } catch (e) {
-    console.error("POST /dailyReport Error:", e); 
+    console.error("POST /dailyReport Error:", e);
     res.status(500).json({
       success: false,
-      response: e,
-      message: "Internal server error", 
-      error: e.errors
+      message: "Internal server error",
     });
   }
 });
+
 
 
 // WEEKLY 
