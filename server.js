@@ -476,56 +476,6 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
 
 
 
-// WEEKLY 
-
-app.get('/weeklyReports', authenticateUser, async (req, res) => {
-  try {
-    const result = await DailyReport.aggregate([
-      {
-        $addFields: {
-          "year": {
-            $isoWeekYear: {
-              date: { $toDate: "$date" }
-            }
-          },
-          "weekNumber": {
-            $isoWeek: {
-              date: { $toDate: "$date" }
-            }
-          }
-        }
-      },
-      {
-        $addFields: {
-          "weekCreated": {
-            $concat: [
-              { $toString: "$year" },
-              "-W",
-              { $toString: "$weekNumber" }
-            ]
-          }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            yearWeek: "$weekCreated",
-            user: "$user"
-          },
-          data: { $push: "$$ROOT" }
-        }
-      }
-    ]).exec();
-
-    console.log(result);
-    res.send(result);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({ message: "Server error" });
-  }
-});
-
-
 // skincare product ROUTE
 //POST
 
