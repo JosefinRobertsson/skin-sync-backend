@@ -592,7 +592,7 @@ app.get("/categories", authenticateUser, async (req, res) => {
 
 
 
-// Logging product usage 
+//POST Logging product usage 
 
 app.post("/productShelf/logUsage", authenticateUser, async (req, res) => {
 try {
@@ -620,7 +620,44 @@ try {
   }
 } catch (e) {
   res.status(500).json({ success: false, message: e.message });
+  console.error("POST /productShelf/logUsage Error:", e);
+  console.error("product category:", e.errors.category);
 }
+});
+
+//POST handle all products in a routine
+
+app.post('/productShelf/toggleAllUsage', authenticateUser, async (req, res) => {
+  try {
+    const { productId, usedToday } = req.body;
+    const accessToken = req.header('Authorization');
+    const user = await User.findOne({ accessToken: accessToken });
+
+    if (user) {
+      const product = await SkincareProduct.findById(productId);
+      if (!product) {
+        res.status(400).json({ success: false, message: "Could not find product", error: e.errors });
+      } 
+  
+      product.usedToday = usedToday;
+  
+      if (usedToday) {
+        product.usageHistory.push(new Date());
+      } else {
+        product.usageHistory.pop();
+      }
+  
+      await product.save();
+      return res.status(200).json({ success: true, response: product });
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Could not find product' });
+    }
+  } catch (error) {
+    console.error('POST /productShelf/toggleAllUsage Error:', error);
+    return res.status(500).json({ success: false });
+  }
 });
 
 
