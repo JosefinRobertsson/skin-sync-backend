@@ -138,8 +138,7 @@ const SkincareProductSchema = new mongoose.Schema({
     required: true
   },
   brand: {
-    type: String,
-    required: true
+    type: String
   },
   category: {
     type: String,
