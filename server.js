@@ -540,6 +540,34 @@ app.get("/categories", authenticateUser, async (req, res) => {
 });
 
 
+// PUT update usage on new date
+
+app.put("/productShelf/usageReset", authenticateUser, async (req, res) => {
+  try {
+    const { productId } = req.body;
+    const accessToken = req.header("Authorization");
+    const user = await User.findOne({ accessToken: accessToken });
+
+    if (user) {
+      const updatedProduct = await SkincareProduct.findByIdAndUpdate(
+        productId,
+        { usedToday: false }
+      );
+
+      if (updatedProduct) {
+        res.status(200).json({ success: true, response: updatedProduct });
+      } else {
+        res.status(400).json({ success: false, message: "Could not update product" });
+      }
+    } else {
+      res.status(400).json({ success: false, message: "Could not update product" });
+    }
+  } catch (e) {
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+
 
 //POST Logging product usage 
 
