@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import listEndpoints from 'express-list-endpoints';
+import e from "express";
 
 // -----------------------------------------
 // SETUP
@@ -100,18 +101,18 @@ const DailyReportSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-/*
-  skinCondition: [{
-    type: String,
-    enum: ['Normal', 'Irritated', 'Dry', 'Oily', 'Dull', 'Itchy', 'With texture', 'Acne'],
-    required: true
-  }],
-  diet: [{
-    type: String,
-    enum: ['Sugar', 'Fast food', 'Alcohol', 'Dairy', 'Veggies', 'Fruits', 'Meat', 'Grains'],
-    required: true
-  }], */
-  
+  /*
+    skinCondition: [{
+      type: String,
+      enum: ['Normal', 'Irritated', 'Dry', 'Oily', 'Dull', 'Itchy', 'With texture', 'Acne'],
+      required: true
+    }],
+    diet: [{
+      type: String,
+      enum: ['Sugar', 'Fast food', 'Alcohol', 'Dairy', 'Veggies', 'Fruits', 'Meat', 'Grains'],
+      required: true
+    }], */
+
   waterAmount: {
     type: Number,
     required: true
@@ -176,10 +177,8 @@ const SkincareProduct = mongoose.model("SkincareProduct", SkincareProductSchema)
 
 const authenticateUser = async (req, res, next) => {
   const accessToken = req.header("Authorization");
-  console.log("accessToken:", accessToken);
   try {
     const user = await User.findOne({ accessToken: accessToken });
-    console.log("user:", user);
     if (user) {
       next();
     } else {
@@ -215,12 +214,11 @@ app.get("/", (req, res) => {
 
 app.get('/', (req, res) => {
   res.json(routes);
-}); 
+});
 
 // Register route
 
 app.post("/register", async (req, res) => {
-  console.log("Received POST /register with body:", req.body);
   const { username, password } = req.body;
   //to make sure a password is created
   if (!password) {
@@ -229,8 +227,8 @@ app.post("/register", async (req, res) => {
       response: "Password is required",
     });
   }
- //ensure password is at least 6 characters long
-  if (password.length < 6) { 
+  //ensure password is at least 6 characters long
+  if (password.length < 6) {
     return res.status(400).json({
       success: false,
       response: "Password needs to be at least 6 characters long",
@@ -262,7 +260,6 @@ app.post("/register", async (req, res) => {
 // Login Route
 
 app.post("/login", async (req, res) => {
-  console.log("Received POST /login with body:", req.body);
   const { username, password } = req.body;
   try {
     // tell us if the password that user put is the same that we have in the data base
@@ -299,7 +296,6 @@ app.post("/login", async (req, res) => {
 // Logout Route
 
 app.post("/logout", authenticateUser, async (req, res) => {
-  console.log("Received POST /logout with body:", req.body);
   const accessToken = req.header("Authorization");
   try {
     const user = await User.findOne({ accessToken: accessToken });
@@ -352,11 +348,10 @@ app.get('/userPage', authenticateUser, async (req, res) => {
         uvIndex: uvIndex
       });
     } else {
-      res.status(403).json({message: "You must be logged in to see this page"});
+      res.status(403).json({ message: "You must be logged in to see this page" });
     }
   } catch (error) {
-    console.log('Error:', error);
-    res.status(500).json({message: "Unable to retrieve UV index at this time"});
+    res.status(500).json({ message: "Unable to retrieve UV index at this time" });
   }
 });
 
@@ -368,7 +363,7 @@ app.get('/statisticsPage', authenticateUser, async (req, res) => {
   const accessToken = req.header('Authorization');
   const user = await User.findOne({ accessToken: accessToken });
   if (user) {
- 
+
     res.status(200).json({ message: 'Statistics page accessed successfully' });
   } else {
     res.status(403).json({ message: 'You must be logged in to see this page' });
@@ -382,7 +377,7 @@ app.get('/statisticsPage', authenticateUser, async (req, res) => {
 //GET
 
 app.get("/dailyReport", authenticateUser, async (req, res) => {
-  
+
   try {
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
@@ -416,10 +411,6 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
     const { exercised, period, waterAmount, sleepHours, stress, acne, greasyFood, dairy, alcohol, sugar } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
-
-    console.log("req.body:", req.body);
-    console.log("accessToken:", accessToken);
-    console.log("user:", user);
 
     if (user) {
       // Get the latest report for the user
@@ -456,7 +447,6 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
         }).save();
       }
 
-      console.log("newDailyReport:", newDailyReport);
       res.status(200).json({ success: true, response: newDailyReport });
     } else {
       res.status(400).json({
@@ -480,7 +470,7 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
 
 app.post("/productShelf", authenticateUser, async (req, res) => {
   try {
-    const { name, brand, category, routine } = req.body;
+    const { name, brand, category, date, routine, usageHistory } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
     if (user) {
@@ -489,8 +479,11 @@ app.post("/productShelf", authenticateUser, async (req, res) => {
         name,
         brand,
         category,
-        routine
+        date,
+        routine,
+        usageHistory
       }).save();
+
       res.status(200).json({ success: true, response: newProduct });
     } else {
       res.status(400).json({ success: false, message: "Could not add product" });
@@ -504,14 +497,14 @@ app.post("/productShelf", authenticateUser, async (req, res) => {
 app.put("/productShelf/:productId", authenticateUser, async (req, res) => {
   try {
     const productId = req.params.productId;
-    const { name, brand, category, routine } = req.body;
+    const { name, brand, category, usedToday, date, routine, usageHistory } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
 
     if (user) {
       const updatedProduct = await SkincareProduct.findByIdAndUpdate(
         productId,
-        { name, brand, category, routine },
+        { name, brand, category, usedToday, date, routine, usageHistory },
         { new: true }
       );
 
@@ -540,9 +533,10 @@ app.get("/categories", authenticateUser, async (req, res) => {
 });
 
 
-// PUT update usage on new date
+// update usage to false on new date
 
-app.put("/productShelf/usageReset", authenticateUser, async (req, res) => {
+app.post("/productShelf/usageReset", authenticateUser, async (req, res) => {
+  console.log("usage reset happening")
   try {
     const { productId } = req.body;
     const accessToken = req.header("Authorization");
@@ -551,55 +545,53 @@ app.put("/productShelf/usageReset", authenticateUser, async (req, res) => {
     if (user) {
       const updatedProduct = await SkincareProduct.findByIdAndUpdate(
         productId,
-        { usedToday: false }
-      );
+        { usedToday: false },
+        { new: true });
 
       if (updatedProduct) {
-        res.status(200).json({ success: true, response: updatedProduct });
+      console.log(updatedProduct)
+      res.status(200).json({ success: true, message: "Usage reset completed" });
       } else {
-        res.status(400).json({ success: false, message: "Could not update product" });
+        res.status(404).json({ success: false, message: "Product not found" });
       }
     } else {
-      res.status(400).json({ success: false, message: "Could not update product" });
+      res.status(400).json({ success: false, message: "Reset failed" });
     }
   } catch (e) {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
-
-
-//POST Logging product usage 
+//POST Logging product usage  
 
 app.post("/productShelf/logUsage", authenticateUser, async (req, res) => {
-try {
-  const { productId, usedToday } = req.body;
-  const accessToken = req.header("Authorization");
-  const user = await User.findOne({ accessToken: accessToken });
-  if (user) {
-    const product = await SkincareProduct.findById(productId);
-    if (!product) {
-      res.status(400).json({ success: false, message: "Could not find product", error: e.errors });
-    } 
+  try {
+    const { productId, usedToday } = req.body;
+    const accessToken = req.header("Authorization");
+    const user = await User.findOne({ accessToken: accessToken });
+    if (user) {
+      const product = await SkincareProduct.findById(productId);
+      if (!product) {
+        res.status(400).json({ success: false, message: "Could not find product", error: e.errors });
+      }
 
-    product.usedToday = usedToday;
+      product.usedToday = usedToday;
 
-    if (usedToday) {
-      product.usageHistory.push(new Date());
+      if (usedToday) {
+        product.usageHistory.push(new Date());
+      } else {
+        product.usageHistory.pop();
+      }
+      await product.save();
+      res.status(200).json({ success: true, response: product });
     } else {
-      product.usageHistory.pop();
+      res.status(400).json({ success: false, message: "Could not find product" });
     }
-
-    await product.save();
-    res.status(200).json({ success: true, response: product });
-  } else {
-    res.status(400).json({ success: false, message: "Could not find product" });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+    console.error("POST /productShelf/logUsage Error:", e);
+    console.error("product category:", e.errors.category);
   }
-} catch (e) {
-  res.status(500).json({ success: false, message: e.message });
-  console.error("POST /productShelf/logUsage Error:", e);
-  console.error("product category:", e.errors.category);
-}
 });
 
 //POST handle all products in a routine
@@ -614,16 +606,16 @@ app.post('/productShelf/toggleAllUsage', authenticateUser, async (req, res) => {
       const product = await SkincareProduct.findById(productId);
       if (!product) {
         res.status(400).json({ success: false, message: "Could not find product", error: e.errors });
-      } 
-  
+      }
+
       product.usedToday = usedToday;
-  
+
       if (usedToday) {
         product.usageHistory.push(new Date());
       } else {
         product.usageHistory.pop();
       }
-  
+
       await product.save();
       return res.status(200).json({ success: true, response: product });
     } else {
@@ -645,10 +637,8 @@ app.get("/productShelf/morning", authenticateUser, async (req, res) => {
   try {
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
-    console.log("User:", user); // Log user object to check if it's retrieved successfully
     if (user) {
       const products = await SkincareProduct.find({ user: user._id, routine: 'morning' });
-      console.log("Morning routine: products", products); // Log products array to check if it contains the expected products
       res.status(200).json({ success: true, response: products });
     } else {
       res.status(400).json({ success: false, message: "Could not find products" });
@@ -665,10 +655,8 @@ app.get("/productShelf/night", authenticateUser, async (req, res) => {
   try {
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
-    console.log("User:", user); // Log user object to check if it's retrieved successfully
     if (user) {
       const products = await SkincareProduct.find({ user: user._id, routine: 'night' });
-      console.log("Night routine: products", products); // Log products array to check if it contains the expected products
       res.status(200).json({ success: true, response: products });
     } else {
       res.status(400).json({ success: false, message: "Could not find products" });
@@ -685,11 +673,8 @@ app.get("/productShelf/night", authenticateUser, async (req, res) => {
 app.delete("/productShelf/:productId", authenticateUser, async (req, res) => {
   try {
     const { productId } = req.params;
-    console.log("productId:", productId);
     const accessToken = req.header("Authorization");
-    console.log("accessToken:", accessToken); 
     const user = await User.findOne({ accessToken: accessToken });
-    console.log("user:", user); 
 
     if (user) {
       await SkincareProduct.findOneAndDelete({ _id: productId, user: user._id });
