@@ -207,7 +207,7 @@ const authenticateUser = async (req, res, next) => {
 // Root route
 app.get("/", (req, res) => {
   res.send({
-    Welcome: "Welcome to the Authentication app",
+    Welcome: "This is the SkinSync app server. To view the frontend, please visit https://jazzy-licorice-dcf587.netlify.app/",
     Routes: listEndpoints(app)
   });
 });
