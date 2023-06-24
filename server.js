@@ -207,7 +207,7 @@ const authenticateUser = async (req, res, next) => {
 // Root route
 app.get("/", (req, res) => {
   res.send({
-    Welcome: "Welcome to the Authentication app",
+    Welcome: "This is the SkinSync app server. To view the frontend, please visit https://jazzy-licorice-dcf587.netlify.app/",
     Routes: listEndpoints(app)
   });
 });
@@ -535,7 +535,6 @@ app.get("/categories", authenticateUser, async (req, res) => {
 // update usage to false on new date
 
 app.post("/productShelf/usageReset", authenticateUser, async (req, res) => {
-  console.log("usage reset happening")
   try {
     const { productId } = req.body;
     const accessToken = req.header("Authorization");
@@ -548,7 +547,6 @@ app.post("/productShelf/usageReset", authenticateUser, async (req, res) => {
         { new: true });
 
       if (updatedProduct) {
-      console.log(updatedProduct)
       res.status(200).json({ success: true, message: "Usage reset completed" });
       } else {
         res.status(404).json({ success: false, message: "Product not found" });
@@ -589,7 +587,6 @@ app.post("/productShelf/logUsage", authenticateUser, async (req, res) => {
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
     console.error("POST /productShelf/logUsage Error:", e);
-    console.error("product category:", e.errors.category);
   }
 });
 
@@ -643,7 +640,7 @@ app.get("/productShelf/morning", authenticateUser, async (req, res) => {
       res.status(400).json({ success: false, message: "Could not find products" });
     }
   } catch (e) {
-    console.error("GET /productShelf/morning Error:", e); // Log any error that occurs during the retrieval process
+    console.error("GET /productShelf/morning Error:", e); 
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
