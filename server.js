@@ -417,7 +417,9 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
       const latestReport = await DailyReport.findOne({ user: user._id }).sort({ date: -1 });
 
       let newDailyReport;
-      if (latestReport) {
+      const currentDate = new Date().toISOString().split('T')[0];
+
+      if (latestReport && latestReport.date.toISOString().split('T')[0] === currentDate) {
         // Update the existing report
         latestReport.exercised = exercised;
         latestReport.period = period;
@@ -430,6 +432,7 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
         latestReport.waterAmount = waterAmount;
         latestReport.sleepHours = sleepHours;
         newDailyReport = await latestReport.save();
+        console.log("lastestReport", latestReport);
       } else {
         // Create a new report
         newDailyReport = await new DailyReport({
@@ -445,7 +448,25 @@ app.post("/dailyReport", authenticateUser, async (req, res) => {
           waterAmount,
           sleepHours
         }).save();
+        console.log("newDailyReport", newDailyReport);
       }
+      /* for adding test data, also add "date" in req.body
+      if (user) {
+        const newDailyReport = await new DailyReport({
+          user: user._id,
+          exercised,
+          period,
+          stress,
+          acne,
+          greasyFood,
+          dairy,
+          alcohol,
+          sugar,
+          waterAmount,
+          sleepHours,
+          date
+        }).save();*/
+  
 
       res.status(200).json({ success: true, response: newDailyReport });
     } else {
