@@ -332,13 +332,12 @@ app.get('/userPage', authenticateUser, async (req, res) => {
   const user = await User.findOne({ accessToken: accessToken });
 
   const axios = require('axios');
-  const API_KEY = '0e71885f3a66e20937e994f9d36993a1';
   const LATITUDE = '60.1282'; // Latitude for Sweden
   const LONGITUDE = '18.6435'; // Longitude for Sweden
 
   try {
-    const response = await axios.get(`http://api.openweathermap.org/data/2.5/onecall?lat=${LATITUDE}&lon=${LONGITUDE}&exclude=hourly,daily&appid=${API_KEY}`);
-    const uvIndex = response.data.current.uvi;
+    const response = await axios.get(`https://api.openweathermap.org/data/2.5/uvi?lat=60.1282&lon=18.6435&appid=c62963aa26b7c860ed01fea29bf9dd34`);
+    const uvIndex = response.data.value;
 
     if (user) {
       res.json({
