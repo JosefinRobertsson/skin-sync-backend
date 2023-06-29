@@ -252,6 +252,7 @@ app.post("/register", async (req, res) => {
   } catch (e) {
     res.status(400).json({
       success: false,
+      message: "User already exists",
       response: "Could not create user", error: e.errors
     });
   }
