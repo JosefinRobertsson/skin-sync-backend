@@ -143,7 +143,7 @@ const SkincareProductSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['cleanser', 'moisturizer', 'serum', 'sunscreen', 'other'],
+    enum: ['body lotion', 'cleanser', 'herbal remedy', 'mist', 'moisturizer', 'oil', 'peeling', 'serum', 'soap', 'spot-treatment', 'sunscreen', 'other'],
     required: true
   },
   date: {
