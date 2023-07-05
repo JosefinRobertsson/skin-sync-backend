@@ -1,6 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import mongoose from 'mongoose';
+import axios from 'axios';
 import authenticateUser from '../Middlewares/middlewares.js';
 import User from '../Models/user.js';
 
@@ -13,7 +14,7 @@ router.get('/userPage', authenticateUser, async (req, res) => {
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
   
-    const axios = require('axios');
+  
     const LATITUDE = '60.1282'; // Latitude for Sweden
     const LONGITUDE = '18.6435'; // Longitude for Sweden
   
