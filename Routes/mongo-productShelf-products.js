@@ -3,7 +3,7 @@ const router = express.Router();
 import mongoose from 'mongoose';
 import authenticateUser from '../Middlewares/middlewares';
 import User from '../Models/user.js';
-import SkincareProduct from '../Models/skincareProduct.js';
+import SkincareProduct from '../Models/skincareProduct';
 
 const mongoUrl = process.env.MONGO_URL || "mongodb://127.0.0.1/SkinSync";
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });

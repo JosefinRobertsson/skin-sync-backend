@@ -11,7 +11,7 @@ mongoose.Promise = Promise;
 
 
 // Get saved daily reports
-app.get("/dailyReport", authenticateUser, async (req, res) => {
+router.get("/dailyReport", authenticateUser, async (req, res) => {
 
     try {
       const accessToken = req.header("Authorization");
@@ -42,7 +42,7 @@ app.get("/dailyReport", authenticateUser, async (req, res) => {
 
 
   //Post a daily report
-app.post("/dailyReport", authenticateUser, async (req, res) => {
+  router.post("/dailyReport", authenticateUser, async (req, res) => {
     try {
       const { exercised, period, waterAmount, sleepHours, stress, acne, greasyFood, dairy, alcohol, sugar } = req.body;
       const accessToken = req.header("Authorization");

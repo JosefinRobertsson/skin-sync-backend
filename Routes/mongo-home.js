@@ -9,7 +9,7 @@ mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = Promise;
 
 // Landing page for logged in users
-app.get('/userPage', authenticateUser, async (req, res) => {
+router.get('/userPage', authenticateUser, async (req, res) => {
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
   

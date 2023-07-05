@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import mongoose from 'mongoose';
 import authenticateUser from '../Middlewares/middlewares';
+import SkincareProduct from '../Models/skincareProduct';
 import User from '../Models/user.js';
 
 const mongoUrl = process.env.MONGO_URL || "mongodb://127.0.0.1/SkinSync";
@@ -10,7 +11,7 @@ mongoose.Promise = Promise;
 
 
 //POST activate or deactivate single product usage  
-app.post("/productShelf/logUsage", authenticateUser, async (req, res) => {
+router.post("/productShelf/logUsage", authenticateUser, async (req, res) => {
     try {
       const { productId, usedToday } = req.body;
       const accessToken = req.header("Authorization");
@@ -41,7 +42,7 @@ app.post("/productShelf/logUsage", authenticateUser, async (req, res) => {
 
 
   //POST handle usage status for all products in a routine
-app.post('/productShelf/toggleAllUsage', authenticateUser, async (req, res) => {
+  router.post('/productShelf/toggleAllUsage', authenticateUser, async (req, res) => {
     try {
       const { productId, usedToday } = req.body;
       const accessToken = req.header('Authorization');
@@ -75,7 +76,7 @@ app.post('/productShelf/toggleAllUsage', authenticateUser, async (req, res) => {
   });
 
 // update usedToday to false on new date
-app.post("/productShelf/usageReset", authenticateUser, async (req, res) => {
+router.post("/productShelf/usageReset", authenticateUser, async (req, res) => {
     try {
       const { productId } = req.body;
       const accessToken = req.header("Authorization");

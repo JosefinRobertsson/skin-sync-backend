@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
+import authenticateUser from '../Middlewares/middlewares.js';
 import User from '../Models/user.js';
 
 const mongoUrl = process.env.MONGO_URL || "mongodb://127.0.0.1/SkinSync";
@@ -10,7 +11,7 @@ mongoose.Promise = Promise;
 
 // Register route
 
-app.post("/register", async (req, res) => {
+router.post("/register", async (req, res) => {
     const { username, password } = req.body;
     //to make sure a password is created
     if (!password) {
@@ -52,7 +53,7 @@ app.post("/register", async (req, res) => {
 
   // Login Route
 
-app.post("/login", async (req, res) => {
+  router.post("/login", async (req, res) => {
     const { username, password } = req.body;
     try {
       // tell us if the password that user put is the same that we have in the data base
@@ -88,7 +89,7 @@ app.post("/login", async (req, res) => {
   
   // Logout Route
   
-  app.post("/logout", authenticateUser, async (req, res) => {
+  router.post("/logout", authenticateUser, async (req, res) => {
     const accessToken = req.header("Authorization");
     try {
       const user = await User.findOne({ accessToken: accessToken });

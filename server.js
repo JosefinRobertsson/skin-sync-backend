@@ -15,8 +15,8 @@ const app = express();
 import mongoUsersRoute from './Routes/mongo-users';
 import mongoHomeRoute from './Routes/mongo-home';
 import mongoDailyReportRoute from './Routes/mongo-dailyreport';
-import mongoProductShelfRoute from './Routes/mongo-productshelf-products';
-import mongoProductUsageRoute from './Routes/mongo-productshelf-productusage';
+import mongoProductShelfRoute from './Routes/mongo-productShelf-products';
+import mongoProductUsageRoute from './Routes/mongo-productShelf-usage';
 import mongoStatisticsRoute from './Routes/mongo-statistics';
 
 
@@ -49,6 +49,9 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get('/', (req, res) => {
+  res.json(routes);
+});
 
 // -----------------------------------------
 // SERVER START
