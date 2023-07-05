@@ -14,7 +14,7 @@ const app = express();
 //Import routes, to connect with files in Routes folder
 import mongoUsersRoute from './Routes/mongo-users.js';
 import mongoHomeRoute from './Routes/mongo-home.js';
-import mongoDailyReportRoute from './Routes/mongo-dailyreport.js';
+import mongoDailyReportRoute from './Routes/mongo-dailyReport.js';
 import mongoProductShelfRoute from './Routes/mongo-productShelf-products.js';
 import mongoProductUsageRoute from './Routes/mongo-productShelf-usage.js';
 import mongoStatisticsRoute from './Routes/mongo-statistics.js';
