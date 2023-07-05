@@ -1,7 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import mongoose from 'mongoose';
-import authenticateUser from '../Middlewares/middlewares';
+import authenticateUser from '../Middlewares/middlewares.js';
 import User from '../Models/user.js';
 
 const mongoUrl = process.env.MONGO_URL || "mongodb://127.0.0.1/SkinSync";

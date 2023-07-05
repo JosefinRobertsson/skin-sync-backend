@@ -1,7 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import mongoose from 'mongoose';
-import authenticateUser from '../Middlewares/middlewares';
+import authenticateUser from '../Middlewares/middlewares.js';
 import DailyReport from '../Models/dailyReport.js';
 import User from '../Models/user.js';
 
