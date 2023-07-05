@@ -1,4 +1,4 @@
-import User from "../Models/user"
+import User from "../Models/user.js"
 
 
 const authenticateUser = async (req, res, next) => {
