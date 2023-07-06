@@ -52,14 +52,14 @@ router.post("/productShelf", authenticateUser, async (req, res) => {
 router.put("/productShelf/:productId", authenticateUser, async (req, res) => {
   try {
     const productId = req.params.productId;
-    const { name, brand, category, usedToday, date, routine, usageHistory } = req.body;
+    const { name, brand, category, usedToday, date, routine, usageHistory, archived } = req.body;
     const accessToken = req.header("Authorization");
     const user = await User.findOne({ accessToken: accessToken });
 
     if (user) {
       const updatedProduct = await SkincareProduct.findByIdAndUpdate(
         productId,
-        { name, brand, category, usedToday, date, routine, usageHistory },
+        { name, brand, category, usedToday, date, routine, usageHistory, archived },
         { new: true }
       );
 

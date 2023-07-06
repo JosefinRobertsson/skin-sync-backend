@@ -33,6 +33,14 @@ const SkincareProductSchema = new mongoose.Schema({
     usageHistory: {
       type: [Date],
       default: []
+    },
+    archived: {
+      type: Boolean,
+      default: false
+    },
+    archivedAt: {
+      type: Date,
+      default: () => new Date()
     }
   });
   
