@@ -41,6 +41,10 @@ const SkincareProductSchema = new mongoose.Schema({
     archivedAt: {
       type: Date,
       default: () => new Date()
+    },
+    favorite: {
+      type: Boolean,
+      default: false
     }
   });
   
