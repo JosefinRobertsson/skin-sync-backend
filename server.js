@@ -23,14 +23,14 @@ import mongoStatisticsRoute from './Routes/mongo-statistics.js';
 // Middlewares 
 app.use(cors());
 app.use(express.json());
-/*
+
 app.use((req, res, next) => {
   if (mongoose.connection.readyState === 1) {
     next()
   } else {
     res.status(503).json({ error: 'Service currently unavailable' })
   }
-});*/
+});
 
 
 //Adding the routes files to the app
@@ -49,11 +49,11 @@ app.get("/", (req, res) => {
     Routes: listEndpoints(app)
   });
 });
-
+/*
 app.get('/', (req, res) => {
   res.json(routes);
 });
-
+*/
 // -----------------------------------------
 // SERVER START
 // -----------------------------------------
